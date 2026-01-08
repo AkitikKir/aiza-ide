@@ -27,45 +27,9 @@ fun App(chatAgent: ChatAgent) {
                 
                 Divider(modifier = Modifier.height(1.dp).fillMaxWidth())
                 
-                ChatPanel(chatAgent)
-            }
-        }
-    }
-}
-
-@Composable
-fun ChatPanel(chatAgent: ChatAgent) {
-    val scope = rememberCoroutineScope()
-    var message by remember { mutableStateOf("") }
-    var chatLog by remember { mutableStateOf("Welcome to Aiza IDE\n") }
-
-    Column(modifier = Modifier.height(300.dp).padding(16.dp)) {
-        Text("AI Agent Chat", style = MaterialTheme.typography.h6)
-        
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            Text(chatLog)
-        }
-        
-        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            TextField(
-                value = message,
-                onValueChange = { message = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Type a message or command...") }
-            )
-            Button(
-                onClick = {
-                    val currentMessage = message
-                    message = ""
-                    chatLog += "You: $currentMessage\n"
-                    scope.launch {
-                        val response = chatAgent.sendMessage(currentMessage)
-                        chatLog += "Agent: $response\n"
-                    }
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text("Send")
+                Box(modifier = Modifier.height(300.dp)) {
+                    ChatView(chatAgent)
+                }
             }
         }
     }

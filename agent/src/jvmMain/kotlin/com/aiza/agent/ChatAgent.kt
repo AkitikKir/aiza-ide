@@ -1,24 +1,29 @@
 package com.aiza.agent
 
 import com.aiza.core.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.*
 import java.io.File
 
 class ChatAgent(private val apiClient: AizaApiClient) {
-    private val messageHistory = mutableListOf<ChatMessage>()
+    private val _history = MutableStateFlow<List<Message>>(emptyList())
+    val history: StateFlow<List<Message>> = _history.asStateFlow()
 
     suspend fun sendMessage(content: String): String {
-        messageHistory.add(ChatMessage("user", content))
+        val userMessage = Message("user", content)
+        _history.value = _history.value + userMessage
         
         val request = ChatRequest(
             model = "groq/compound",
-            messages = messageHistory.toList()
+            messages = _history.value
         )
         
         val response = apiClient.getChatCompletion(request)
-        val assistantMessage = response.choices.firstOrNull()?.message ?: ChatMessage("assistant", "Error: No response")
+        val assistantMessage = response.choices.firstOrNull()?.message ?: Message("assistant", "Error: No response")
         
-        messageHistory.add(assistantMessage)
+        _history.value = _history.value + assistantMessage
         
         // Simple command parsing (JSON blocks)
         parseAndExecuteCommands(assistantMessage.content)

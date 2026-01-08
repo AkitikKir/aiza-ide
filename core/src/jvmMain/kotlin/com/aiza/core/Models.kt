@@ -3,7 +3,7 @@ package com.aiza.core
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ChatMessage(
+data class Message(
     val role: String,
     val content: String
 )
@@ -11,7 +11,7 @@ data class ChatMessage(
 @Serializable
 data class ChatRequest(
     val model: String,
-    val messages: List<ChatMessage>,
+    val messages: List<Message>,
     val temperature: Double = 0.7,
     val max_tokens: Int = 1000
 )
@@ -23,7 +23,7 @@ data class ChatResponse(
 
 @Serializable
 data class ChatChoice(
-    val message: ChatMessage
+    val message: Message
 )
 
 @Serializable
