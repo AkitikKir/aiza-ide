@@ -20,10 +20,11 @@ compose.desktop {
         mainClass = "com.aiza.MainKt"
         nativeDistributions {
             targetFormats(
-                if (System.getProperty("os.name").contains("Mac")) {
+                if (System.getProperty("os.name").contains("Mac", ignoreCase = true)) {
                     org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg
-                } else if (System.getProperty("os.name").contains("Windows")) {
-                    org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi
+                } else if (System.getProperty("os.name").contains("Windows", ignoreCase = true)) {
+                    org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
+                    org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe
                 } else {
                     org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb
                 }
