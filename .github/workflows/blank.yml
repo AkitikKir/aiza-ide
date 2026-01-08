@@ -1,4 +1,4 @@
-name: Build & Package Aiza IDE
+name: Build and Package Aiza IDE
 
 on:
   push:
@@ -10,16 +10,11 @@ jobs:
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            artifact_path: desktopApp/build/compose/binaries/main/deb/*.deb
-          - os: windows-latest
-            artifact_path: desktopApp/build/compose/binaries/main/msi/*.msi
-          - os: macos-latest
-            artifact_path: desktopApp/build/compose/binaries/main/dmg/*.dmg
 
     steps:
       - name: Checkout Code
@@ -32,20 +27,29 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+        shell: bash
+
       - name: Create .env from Secrets
         run: |
-          echo "AIZA_API_KEY=${{ secrets.AIZA_API_KEY }}" >> .env
-          echo "AIZA_BASE_URL=https://api.aiza-ai.ru/v1" >> .env
+          echo "AIZA_API_KEY=${{ secrets.AIZA_API_KEY }}" > .env
+          echo "AIZA_BASE_URL=${{ secrets.AIZA_BASE_URL || 'https://api.aiza-ai.ru/v1' }}" >> .env
         shell: bash
 
       - name: Build and Package
-        run: ./gradlew :desktopApp:package
+        run: ./gradlew :desktopApp:package --no-daemon --stacktrace --info
         shell: bash
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: AizaIDE-${{ matrix.os }}
-          path: ${{ matrix.artifact_path }}
+          path: |
+            desktopApp/build/compose/binaries/main/deb/*.deb
+            desktopApp/build/compose/binaries/main/msi/*.msi
+            desktopApp/build/compose/binaries/main/dmg/*.dmg
+            desktopApp/build/compose/binaries/main/pkg/*.pkg
+            desktopApp/build/compose/binaries/main/exe/*.exe
           if-no-files-found: warn
           
