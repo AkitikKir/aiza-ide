@@ -1,6 +1,6 @@
 # Aiza IDE
 
-Aiza IDE is a cross-platform development environment for Vibe Coding, built with Kotlin and Jetpack Compose Multiplatform. It features an integrated AI coding agent powered by the Aiza API.
+Aiza IDE is a cross-platform development env for Vibe Coding, built with Kotlin and Jetpack Compose Multiplatform. It features an integrated AI coding agent powered by the Aiza API.
 
 ## Features
 
