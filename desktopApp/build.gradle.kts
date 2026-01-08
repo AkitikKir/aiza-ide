@@ -19,16 +19,12 @@ compose.desktop {
     application {
         mainClass = "com.aiza.MainKt"
         nativeDistributions {
-            targetFormats(
-                if (System.getProperty("os.name").contains("Mac", ignoreCase = true)) {
-                    org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg
-                } else if (System.getProperty("os.name").contains("Windows", ignoreCase = true)) {
-                    org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
-                    org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe
-                } else {
-                    org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb
-                }
-            )
+            val os = System.getProperty("os.name").lowercase()
+            when {
+                os.contains("mac") -> targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
+                os.contains("windows") -> targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe)
+                else -> targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb)
+            }
             packageName = "AizaIDE"
             packageVersion = "1.0.0"
         }
