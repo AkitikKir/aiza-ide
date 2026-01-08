@@ -1,10 +1,7 @@
-rootProject.name = "AizaIDE"
+rootProject.name = "aiza-ide"
 
 include(":core")
-include(":ui")
-include(":editor")
-include(":terminal")
-include(":webview")
-include(":agent")
 include(":config")
+include(":agent")
+include(":ui")
 include(":desktopApp")

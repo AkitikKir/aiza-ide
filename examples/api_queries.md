@@ -1,8 +1,9 @@
-# Aiza API Examples
+# Aiza API Queries Example
 
-> **Note**: These examples are sanitized. Do not commit your real API key. Use the `.env` file for local development.
+This file contains examples of how to interact with the Aiza API.
+**Note: The original file with a real key is attached separately. DO NOT COMMIT REAL KEYS.**
 
-## Chat Completions
+## 1. Chat Completion (curl)
 
 ```bash
 curl -X POST 'https://api.aiza-ai.ru/v1/chat/completions' \
@@ -18,14 +19,13 @@ curl -X POST 'https://api.aiza-ai.ru/v1/chat/completions' \
   }'
 ```
 
-## List Models
+## 2. List Models (curl)
 
 ```bash
-curl -X GET 'https://api.aiza-ai.ru/v1/models' \
-  -H "Authorization: Bearer ${AIZA_API_KEY}"
+curl -X GET 'https://api.aiza-ai.ru/v1/models' -H "Authorization: Bearer ${AIZA_API_KEY}"
 ```
 
-## Kotlin (Ktor) Example
+## 3. Kotlin (Ktor) Example
 
 ```kotlin
 val client = HttpClient(CIO) {
@@ -34,15 +34,12 @@ val client = HttpClient(CIO) {
     }
 }
 
-val response = client.post("https://api.aiza-ai.ru/v1/chat/completions") {
-    header("Authorization", "Bearer ${AIZA_API_KEY}")
+val response: HttpResponse = client.post("https://api.aiza-ai.ru/v1/chat/completions") {
+    header(HttpHeaders.Authorization, "Bearer ${System.getenv("AIZA_API_KEY")}")
     contentType(ContentType.Application.Json)
     setBody(ChatRequest(
         model = "groq/compound",
-        messages = listOf(Message("user", "Hello!"))
+        messages = listOf(ChatMessage("user", "Hello"))
     ))
 }
 ```
-
----
-*Note: The original examples provided by the user may contain real keys. Those should NEVER be committed to the repository.*

@@ -1,100 +1,69 @@
 package com.aiza.agent
 
 import com.aiza.core.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 
-@Serializable
-data class AgentCommand(
-    val type: String,
-    val path: String? = null,
-    val content: String? = null,
-    val command: String? = null,
-    val patch: String? = null
-)
-
 class ChatAgent(private val apiClient: AizaApiClient) {
-    private val _history = MutableStateFlow<List<Message>>(emptyList())
-    val history = _history.asStateFlow()
+    private val messageHistory = mutableListOf<ChatMessage>()
 
-    private val json = Json { ignoreUnknownKeys = true }
-
-    suspend fun sendMessage(content: String, model: String = "groq/compound"): String {
-        val userMessage = Message("user", content)
-        _history.value += userMessage
-
+    suspend fun sendMessage(content: String): String {
+        messageHistory.add(ChatMessage("user", content))
+        
         val request = ChatRequest(
-            model = model,
-            messages = _history.value
+            model = "groq/compound",
+            messages = messageHistory.toList()
         )
-
+        
         val response = apiClient.getChatCompletion(request)
-        val assistantMessage = response.choices.first().message
-        _history.value += assistantMessage
-
+        val assistantMessage = response.choices.firstOrNull()?.message ?: ChatMessage("assistant", "Error: No response")
+        
+        messageHistory.add(assistantMessage)
+        
+        // Simple command parsing (JSON blocks)
+        parseAndExecuteCommands(assistantMessage.content)
+        
         return assistantMessage.content
     }
 
-    fun parseCommands(content: String): List<AgentCommand> {
-        val commands = mutableListOf<AgentCommand>()
-        val regex = "```json\\s*(\\{[\\s\\S]*?\\})\\s*```".toRegex()
+    private fun parseAndExecuteCommands(content: String) {
+        val regex = "```json\\s*([\\s\\S]*?)\\s*```".toRegex()
         regex.findAll(content).forEach { match ->
+            val jsonString = match.groupValues[1]
             try {
-                val cmd = json.decodeFromString<AgentCommand>(match.groupValues[1])
-                commands.add(cmd)
+                val json = Json.parseToJsonElement(jsonString).jsonObject
+                val command = json["command"]?.jsonPrimitive?.content
+                when (command) {
+                    "file.create" -> {
+                        val path = json["path"]?.jsonPrimitive?.content ?: return@forEach
+                        val data = json["content"]?.jsonPrimitive?.content ?: ""
+                        createFile(path, data)
+                    }
+                    "shell.run" -> {
+                        val cmd = json["cmd"]?.jsonPrimitive?.content ?: return@forEach
+                        runShell(cmd)
+                    }
+                }
             } catch (e: Exception) {
                 println("Failed to parse command: ${e.message}")
             }
         }
-        return commands
     }
 
-    fun executeCommand(command: AgentCommand): String {
-        return when (command.type) {
-            "file.create" -> createFile(command.path!!, command.content!!)
-            "file.edit" -> editFile(command.path!!, command.content!!)
-            "shell.run" -> runShell(command.command!!)
-            else -> "Unknown command type: ${command.type}"
-        }
+    private fun createFile(path: String, content: String) {
+        val file = File(path)
+        file.parentFile?.mkdirs()
+        file.writeText(content)
+        println("Created file: $path")
     }
 
-    private fun createFile(path: String, content: String): String {
-        return try {
-            val file = File(path)
-            file.parentFile?.mkdirs()
-            file.writeText(content)
-            "File created successfully: $path"
-        } catch (e: Exception) {
-            "Error creating file: ${e.message}"
-        }
-    }
-
-    private fun editFile(path: String, content: String): String {
-        return try {
-            val file = File(path)
-            if (!file.exists()) return "File does not exist: $path"
-            file.writeText(content)
-            "File updated successfully: $path"
-        } catch (e: Exception) {
-            "Error updating file: ${e.message}"
-        }
-    }
-
-    private fun runShell(command: String): String {
-        return try {
+    private fun runShell(command: String) {
+        try {
             val process = Runtime.getRuntime().exec(command)
             val output = process.inputStream.bufferedReader().readText()
-            val error = process.errorStream.bufferedReader().readText()
-            if (error.isNotEmpty()) "Output: $output\nError: $error" else output
+            println("Shell output for '$command':\n$output")
         } catch (e: Exception) {
-            "Error running shell: ${e.message}"
+            println("Failed to run shell: ${e.message}")
         }
-    }
-
-    fun clearHistory() {
-        _history.value = emptyList()
     }
 }

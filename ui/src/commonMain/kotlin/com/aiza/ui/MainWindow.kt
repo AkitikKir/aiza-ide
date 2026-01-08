@@ -6,50 +6,66 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.aiza.agent.ChatAgent
-import java.io.File
+import kotlinx.coroutines.launch
 
 @Composable
-fun MainWindow(agent: ChatAgent) {
-    var selectedFile by remember { mutableStateOf<File?>(null) }
-    var editorContent by remember { mutableStateOf("") }
-    var terminalOutput by remember { mutableStateOf("Welcome to Aiza IDE Terminal\n$ ") }
-
+fun App(chatAgent: ChatAgent) {
     MaterialTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(title = { Text("Aiza IDE") })
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Sidebar / File Explorer Placeholder
+            Box(modifier = Modifier.width(200.dp).fillMaxHeight()) {
+                Text("File Explorer", modifier = Modifier.padding(16.dp))
             }
-        ) { padding ->
-            Row(modifier = Modifier.fillMaxSize().padding(padding)) {
-                // Sidebar: File Explorer
-                Box(modifier = Modifier.width(250.dp).fillMaxHeight()) {
-                    FileExplorerView(rootPath = ".", onFileSelected = { file ->
-                        selectedFile = file
-                        if (!file.isDirectory) {
-                            editorContent = file.readText()
-                        }
-                    })
+            
+            Divider(modifier = Modifier.width(1.dp).fillMaxHeight())
+            
+            // Editor and Chat
+            Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    Text("Code Editor Placeholder", modifier = Modifier.padding(16.dp))
                 }
+                
+                Divider(modifier = Modifier.height(1.dp).fillMaxWidth())
+                
+                ChatPanel(chatAgent)
+            }
+        }
+    }
+}
 
-                Divider(modifier = Modifier.width(1.dp).fillMaxHeight())
+@Composable
+fun ChatPanel(chatAgent: ChatAgent) {
+    val scope = rememberCoroutineScope()
+    var message by remember { mutableStateOf("") }
+    var chatLog by remember { mutableStateOf("Welcome to Aiza IDE\n") }
 
-                // Main Content: Editor and Terminal
-                Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                    Box(modifier = Modifier.weight(0.7f).fillMaxWidth()) {
-                        CodeEditorView(content = editorContent, onContentChange = { editorContent = it })
+    Column(modifier = Modifier.height(300.dp).padding(16.dp)) {
+        Text("AI Agent Chat", style = MaterialTheme.typography.h6)
+        
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Text(chatLog)
+        }
+        
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            TextField(
+                value = message,
+                onValueChange = { message = it },
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("Type a message or command...") }
+            )
+            Button(
+                onClick = {
+                    val currentMessage = message
+                    message = ""
+                    chatLog += "You: $currentMessage\n"
+                    scope.launch {
+                        val response = chatAgent.sendMessage(currentMessage)
+                        chatLog += "Agent: $response\n"
                     }
-                    Divider(modifier = Modifier.height(1.dp).fillMaxWidth())
-                    Box(modifier = Modifier.weight(0.3f).fillMaxWidth()) {
-                        TerminalView(output = terminalOutput)
-                    }
-                }
-
-                Divider(modifier = Modifier.width(1.dp).fillMaxHeight())
-
-                // Right Panel: Chat Agent
-                Box(modifier = Modifier.width(350.dp).fillMaxHeight()) {
-                    ChatView(agent = agent)
-                }
+                },
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text("Send")
             }
         }
     }

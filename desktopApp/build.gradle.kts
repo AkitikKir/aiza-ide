@@ -8,10 +8,8 @@ kotlin {
     sourceSets {
         val jvmMain by getting {
             dependencies {
-                implementation(compose.desktop.currentOs)
                 implementation(project(":ui"))
-                implementation(project(":config"))
-                implementation(project(":agent"))
+                implementation(compose.desktop.currentOs)
             }
         }
     }
