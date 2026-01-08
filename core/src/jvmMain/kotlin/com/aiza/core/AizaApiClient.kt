@@ -2,6 +2,7 @@ package com.aiza.core
 
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -12,7 +13,7 @@ class AizaApiClient(
     private val apiKey: String,
     private val baseUrl: String = "https://api.aiza-ai.ru/v1"
 ) {
-    private val client = HttpClient {
+    private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true

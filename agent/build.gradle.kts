@@ -6,7 +6,7 @@ plugins {
 kotlin {
     jvm()
     sourceSets {
-        val commonMain by getting {
+        val jvmMain by getting {
             dependencies {
                 implementation(project(":core"))
                 implementation(project(":config"))
