@@ -22,7 +22,7 @@ compose.desktop {
             val os = System.getProperty("os.name").lowercase()
             when {
                 os.contains("mac") -> targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
-                os.contains("windows") -> targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe)
+                os.contains("windows") -> targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
                 else -> targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb)
             }
             packageName = "AizaIDE"
