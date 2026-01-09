@@ -9,6 +9,9 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation(project(":ui"))
+                implementation(project(":agent"))
+                implementation(project(":config"))
+                implementation(project(":core"))
                 implementation(compose.desktop.currentOs)
             }
         }
