@@ -30,6 +30,9 @@ compose.desktop {
             }
             packageName = "AizaIDE"
             packageVersion = "1.0.0"
+            linux {
+                packageDeps = "libasound2, libpng16-16, libx11-6, libxext6, libxrender1, libxtst6, libfreetype6"
+            }
         }
     }
 }
