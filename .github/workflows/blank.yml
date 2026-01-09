@@ -45,7 +45,7 @@ jobs:
         env:
           AIZA_API_KEY: ${{ secrets.AIZA_API_KEY }}
           AIZA_BASE_URL: ${{ secrets.AIZA_BASE_URL }}
-        run: ./gradlew :desktopApp:package --stacktrace
+        run: ./gradlew :desktopApp:package
         shell: bash
 
       - name: Upload Artifacts
