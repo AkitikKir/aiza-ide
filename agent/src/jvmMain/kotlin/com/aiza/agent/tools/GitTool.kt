@@ -6,7 +6,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 class GitTool : Tool {
@@ -104,24 +104,25 @@ class GitTool : Tool {
 
     private fun gitAdd(request: ToolRequest): ToolResult {
         val filesEl = request.parameters["files"]
-        val files: List<String> = when (filesEl) {
-            is JsonArray -> filesEl.mapNotNull { it.jsonPrimitive.contentOrNull }.ifEmpty { listOf(".") }
-            is JsonElement -> listOfNotNull(filesEl.jsonPrimitive.contentOrNull)
-            else -> listOf(".")
-        }
-        val args = mutableListOf("add") + files
+        val files: List<String> =
+            if (filesEl is JsonArray) {
+                filesEl.mapNotNull { it.jsonPrimitive.contentOrNull }.ifEmpty { listOf(".") }
+            } else {
+                val single = request.parameters["files"]?.jsonPrimitive?.contentOrNull
+                if (single != null) listOf(single) else listOf(".")
+            }
+        val args: List<String> = listOf("add") + files
         return executeGitCommand(request, args)
     }
 
     private fun gitCommit(request: ToolRequest): ToolResult {
         val message = request.parameters["message"]?.jsonPrimitive?.content
             ?: return ErrorResult(request.requestId, "Missing required parameter: message for commit")
-        // Escape double quotes for shell safety if needed; ProcessBuilder avoids shell expansion here.
         return executeGitCommand(request, listOf("commit", "-m", message))
     }
 
     private fun gitPush(request: ToolRequest): ToolResult {
-        val branch = request.parameters["branch"]?.jsonPrimitive?.content.orEmpty()
+        val branch = request.parameters["branch"]?.jsonPrimitive?.contentOrNull.orEmpty()
         val args = if (branch.isNotEmpty()) listOf("push", "origin", branch) else listOf("push")
         return executeGitCommand(request, args)
     }
@@ -178,9 +179,4 @@ class GitTool : Tool {
             )
         }
     }
-
-    private val String?.contentOrNull: String?
-        get() = try {
-            this?.let { it }
-        } catch (_: Exception) { null }
 }
