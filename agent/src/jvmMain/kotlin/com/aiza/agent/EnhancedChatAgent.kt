@@ -71,25 +71,59 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
 
         val buffer = StringBuilder()
 
-        // Collect streaming chunks and update assistant message incrementally
-        apiClient.getChatCompletionStream(request).collect { chunk ->
-            val delta = chunk.choices.firstOrNull()?.delta?.content.orElse("")
-            if (delta.isNotEmpty() && assistantIndex >= 0) {
-                buffer.append(delta)
+        // Try streaming first; if it fails, fall back to non-streaming request
+        try {
+            apiClient.getChatCompletionStream(request).collect { chunk ->
+                val delta = chunk.choices.firstOrNull()?.delta?.content.orElse("")
+                if (delta.isNotEmpty() && assistantIndex >= 0) {
+                    buffer.append(delta)
+                    val idx = assistantIndex
+                    _history.update { list ->
+                        val mutable = list.toMutableList()
+                        val current = mutable[idx]
+                        mutable[idx] = current.copy(content = current.content + delta)
+                        mutable
+                    }
+                }
+            }
+
+            // After stream completes, parse and handle any commands found in the final assistant content
+            val finalContent = buffer.toString()
+            if (finalContent.isNotEmpty()) {
+                val commands = commandParser.parseCommands(finalContent)
+                if (commands.isNotEmpty()) {
+                    handleCommands(commands)
+                }
+            } else if (assistantIndex >= 0) {
+                // If stream produced nothing, set a minimal message to avoid empty bubble
                 val idx = assistantIndex
                 _history.update { list ->
                     val mutable = list.toMutableList()
                     val current = mutable[idx]
-                    mutable[idx] = current.copy(content = current.content + delta)
+                    mutable[idx] = current.copy(content = "...")
                     mutable
                 }
             }
-        }
+        } catch (e: Exception) {
+            // Fallback to non-streaming completion
+            val response = apiClient.getChatCompletion(request)
+            val assistantMessage = response.choices.firstOrNull()?.message ?: Message("assistant", "Error: No response")
 
-        // After stream completes, parse and handle any commands found in the final assistant content
-        val finalContent = buffer.toString()
-        if (finalContent.isNotEmpty()) {
-            val commands = commandParser.parseCommands(finalContent)
+            // Replace placeholder with the final assistant message
+            if (assistantIndex >= 0) {
+                val idx = assistantIndex
+                _history.update { list ->
+                    val mutable = list.toMutableList()
+                    val current = mutable[idx]
+                    mutable[idx] = current.copy(content = assistantMessage.content)
+                    mutable
+                }
+            } else {
+                _history.update { it + assistantMessage }
+            }
+
+            // Parse and handle any commands in the fallback response
+            val commands = commandParser.parseCommands(assistantMessage.content)
             if (commands.isNotEmpty()) {
                 handleCommands(commands)
             }
