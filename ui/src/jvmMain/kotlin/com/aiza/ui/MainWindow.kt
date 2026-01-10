@@ -5,30 +5,37 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.aiza.agent.ChatAgent
-import kotlinx.coroutines.launch
+import com.aiza.agent.EnhancedChatAgent
 
 @Composable
-fun App(chatAgent: ChatAgent) {
+fun App(chatAgent: EnhancedChatAgent) {
     MaterialTheme {
+        val terminalOut by chatAgent.terminalOutput.collectAsState()
+
         Row(modifier = Modifier.fillMaxSize()) {
-            // Sidebar / File Explorer Placeholder
-            Box(modifier = Modifier.width(200.dp).fillMaxHeight()) {
-                Text("File Explorer", modifier = Modifier.padding(16.dp))
+            // Sidebar / File Explorer
+            Box(modifier = Modifier.width(240.dp).fillMaxHeight()) {
+                FileExplorerView(rootPath = ".") { /* TODO: integrate with editor selection */ }
             }
-            
+
             Divider(modifier = Modifier.width(1.dp).fillMaxHeight())
-            
-            // Editor and Chat
+
+            // Editor and Chat + Terminal
             Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     Text("Code Editor Placeholder", modifier = Modifier.padding(16.dp))
                 }
-                
+
                 Divider(modifier = Modifier.height(1.dp).fillMaxWidth())
-                
-                Box(modifier = Modifier.height(300.dp)) {
-                    ChatView(chatAgent)
+
+                Column(modifier = Modifier.height(420.dp).fillMaxWidth()) {
+                    Box(modifier = Modifier.height(260.dp).fillMaxWidth()) {
+                        ChatView(chatAgent)
+                    }
+                    Divider(modifier = Modifier.height(1.dp).fillMaxWidth())
+                    Box(modifier = Modifier.height(159.dp).fillMaxWidth()) {
+                        TerminalView(terminalOut)
+                    }
                 }
             }
         }
