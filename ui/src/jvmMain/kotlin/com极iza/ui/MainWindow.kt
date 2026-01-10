@@ -25,14 +25,14 @@ fun App(
     // Editor state
     var currentFile by remember { mutableStateOf<File?>(null) }
     var editorText by remember { mutableStateOf("") }
-    var saveMessage by remember { mutable极ateOf<String?>(null) }
+    var saveMessage by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Modern Top App Bar with elevated design
         CenterAlignedTopAppBar(
             title = { 
                 Text(
-                    text = "Aiza IDE — ${projectRoot.ifBlank { "No project" }}", 
+                    text = "Aiza IDE — ${projectRoot.ifBlank { "极o project" }}", 
                     style = MaterialTheme.typography.titleMedium
                 )
             },
@@ -50,7 +50,7 @@ fun App(
                     )
                 }
             },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            colors = TopAppBarDefaults.centerAlignedTopAppBar极olors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 titleContentColor = MaterialTheme.colorScheme.onSurface,
                 actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -64,7 +64,7 @@ fun App(
             Surface(
                 modifier = Modifier.width(280.dp).fillMaxHeight(),
                 tonalElevation = 8.dp,
-                color = MaterialTheme.colorScheme.surfaceContainerLow极
+                color = MaterialTheme.colorScheme.surfaceContainerLowest
             ) {
                 FileExplorerView(rootPath = projectRoot.ifBlank { "." }) { file ->
                     if (file.isFile) {
@@ -89,4 +89,23 @@ fun App(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            vertical
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = currentFile?.absolutePath ?: "No file selected",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Row {
+                                if (saveMessage != null) {
+                                    Text(
+                                        text = saveMessage ?: "",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                }
+                                Button(
+                                    onClick = {
+                                        val f = currentFile
+                                        if (f != null)

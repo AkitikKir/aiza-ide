@@ -1,46 +1,44 @@
 package com.aiza.ui
 
-import androidx.compose.material.Colors
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Shapes
-import androidx.compose.material.Typography
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 object AizaPalette {
-    // Dark palette
-    val DarkPrimary = Color(0xFF90CAF9)   // Light Blue 200
-    val DarkPrimaryVariant = Color(0xFF64B5F6)
-    val DarkSecondary = Color(0xFF80CBC4) // Teal 200
-    val DarkBackground = Color(0xFF0F1115) // Near-black
-    val DarkSurface = Color(0xFF161A1F)
+    // Modern dark palette (Material You inspired)
+    val DarkPrimary = Color(0xFF8BABF1)    // Modern blue
+    val DarkSecondary = Color(0xFF83C5BE)  // Modern teal
+    val DarkTertiary = Color(0xFFF9A8D4)   // Modern pink
+    val DarkBackground = Color(0xFF121212) // True dark background
+    val DarkSurface = Color(0xFF1E1E1E)    // Elevated surface
     val DarkError = Color(0xFFCF6679)
-    val DarkOnPrimary = Color(0xFF0B0E11)
-    val DarkOnSecondary = Color(0xFF0B0E11)
-    val DarkOnBackground = Color(0xFFE3E6EA)
-    val DarkOnSurface = Color(0xFFE3E6EA)
-    val DarkOnError = Color(0xFF0B0E11)
+    val DarkOnPrimary = Color(0xFF000000)
+    val DarkOnSecondary = Color(0xFF000000)
+    val DarkOnBackground = Color(0xFFFFFFFF)
+    val DarkOnSurface = Color(0xFFFFFFFF)
+    val DarkOnError = Color(0xFF000000)
 
-    // Light palette
-    val LightPrimary = Color(0xFF1976D2)
-    val LightPrimaryVariant = Color(0xFF1565C0)
-    val LightSecondary = Color(0xFF00897B)
-    val LightBackground = Color(0xFFF7F9FC)
-    val LightSurface = Color(0xFFFFFFFF)
+    // Modern light palette
+    val LightPrimary = Color(0xFF0066CC)   // Vibrant blue
+    val LightSecondary = Color(0xFF00857A)  // Vibrant teal
+    val LightTertiary = Color(0xFFD53F8C)  // Vibrant pink
+    val LightBackground = Color(0xFFF8FAFC) // Soft background
+    val LightSurface = Color(0xFFFFFFFF)    // Pure white surface
     val LightError = Color(0xFFB00020)
     val LightOnPrimary = Color(0xFFFFFFFF)
     val LightOnSecondary = Color(0xFFFFFFFF)
-    val LightOnBackground = Color(0xFF0F1115)
-    val LightOnSurface = Color(0xFF0F1115)
+    val LightOnBackground = Color(0xFF1A1A1A)
+    val LightOnSurface = Color(0xFF1A1A1A)
     val LightOnError = Color(0xFFFFFFFF)
 }
 
-private fun darkPalette(): Colors = darkColors(
+private val DarkColorScheme = darkColorScheme(
     primary = AizaPalette.DarkPrimary,
-    primaryVariant = AizaPalette.DarkPrimaryVariant,
     secondary = AizaPalette.DarkSecondary,
+    tertiary = AizaPalette.DarkTertiary,
     background = AizaPalette.DarkBackground,
     surface = AizaPalette.DarkSurface,
     error = AizaPalette.DarkError,
@@ -51,10 +49,10 @@ private fun darkPalette(): Colors = darkColors(
     onError = AizaPalette.DarkOnError
 )
 
-private fun lightPalette(): Colors = lightColors(
+private val LightColorScheme = lightColorScheme(
     primary = AizaPalette.LightPrimary,
-    primaryVariant = AizaPalette.LightPrimaryVariant,
     secondary = AizaPalette.LightSecondary,
+    tertiary = AizaPalette.LightTertiary,
     background = AizaPalette.LightBackground,
     surface = AizaPalette.LightSurface,
     error = AizaPalette.LightError,
@@ -66,17 +64,17 @@ private fun lightPalette(): Colors = lightColors(
 )
 
 /**
- * App-wide theme wrapper with dark/light palettes.
+ * Modern Material Design 3 theme wrapper with dark/light palettes
  */
 @Composable
 fun AizaTheme(
-    darkTheme: Boolean,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    
     MaterialTheme(
-        colors = if (darkTheme) darkPalette() else lightPalette(),
-        typography = Typography(),
-        shapes = Shapes(),
+        colorScheme = colorScheme,
         content = content
     )
 }
