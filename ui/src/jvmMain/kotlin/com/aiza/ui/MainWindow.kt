@@ -8,14 +8,27 @@ import androidx.compose.ui.unit.dp
 import com.aiza.agent.EnhancedChatAgent
 
 @Composable
-fun App(chatAgent: EnhancedChatAgent) {
-    MaterialTheme {
-        val terminalOut by chatAgent.terminalOutput.collectAsState()
+fun App(
+    chatAgent: EnhancedChatAgent,
+    projectRoot: String,
+    onOpenProject: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    val terminalOut by chatAgent.terminalOutput.collectAsState()
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text(text = "Aiza IDE — ${projectRoot.ifBlank { "No project" }}") },
+            actions = {
+                TextButton(onClick = onOpenProject) { Text("Open") }
+                TextButton(onClick = onOpenSettings) { Text("Settings") }
+            }
+        )
 
         Row(modifier = Modifier.fillMaxSize()) {
             // Sidebar / File Explorer
             Box(modifier = Modifier.width(240.dp).fillMaxHeight()) {
-                FileExplorerView(rootPath = ".") { /* TODO: integrate with editor selection */ }
+                FileExplorerView(rootPath = projectRoot.ifBlank { "." }) { /* TODO: integrate with editor selection */ }
             }
 
             Divider(modifier = Modifier.width(1.dp).fillMaxHeight())
