@@ -1,7 +1,7 @@
 package com.aiza.agent
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Base interface for all tools that can be executed by the AI agent
@@ -9,8 +9,8 @@ import kotlinx.serialization.json.JsonObject
 interface Tool {
     val name: String
     val description: String
-    val schema: JsonObject
-    
+    val schema: JsonElement
+
     suspend fun execute(request: ToolRequest): ToolResult
 }
 
@@ -20,7 +20,7 @@ interface Tool {
 @Serializable
 data class ToolRequest(
     val tool: String,
-    val parameters: Map<String, Any>,
+    val parameters: Map<String, JsonElement>,
     val requestId: String = "",
     val dryRun: Boolean = false
 )
@@ -38,7 +38,7 @@ sealed interface ToolResult {
 data class SuccessResult(
     override val requestId: String,
     val output: String,
-    val data: Map<String, Any> = emptyMap()
+    val data: JsonElement? = null
 ) : ToolResult {
     override val success: Boolean = true
 }
@@ -47,7 +47,7 @@ data class SuccessResult(
 data class ErrorResult(
     override val requestId: String,
     val error: String,
-    val details: Map<String, Any> = emptyMap()
+    val details: JsonElement? = null
 ) : ToolResult {
     override val success: Boolean = false
 }
@@ -56,7 +56,7 @@ data class ErrorResult(
 data class ApprovalRequiredResult(
     override val requestId: String,
     val message: String,
-    val details: Map<String, Any> = emptyMap()
+    val details: JsonElement? = null
 ) : ToolResult {
     override val success: Boolean = false
 }

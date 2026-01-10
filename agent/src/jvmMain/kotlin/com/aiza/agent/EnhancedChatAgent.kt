@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.json.*
 import java.util.UUID
 
 /**
@@ -97,6 +98,15 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
 
     // Small helper to avoid null checks noise
     private fun String?.orElse(fallback: String) = this ?: fallback
+
+    // Extract a string field from a JsonElement object safely
+    private fun jsonGetString(el: JsonElement?, key: String): String {
+        return try {
+            (el as? JsonObject)?.get(key)?.jsonPrimitive?.content ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
     
     private suspend fun handleCommands(commands: List<CommandParser.ParsedCommand>) {
         for (command in commands) {
@@ -123,7 +133,7 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
                         "✅ ${result.output}"
                     )}
                     if (command.toolName == "shell") {
-                        val out = (result.data["output"] as? String).orEmpty()
+                        val out = jsonGetString(result.data, "output")
                         if (out.isNotEmpty()) {
                             _terminalOutput.update { it + out + "\n" }
                         }
@@ -134,7 +144,7 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
                         "❌ ${result.error}"
                     )}
                     if (command.toolName == "shell") {
-                        val out = (result.details["output"] as? String).orEmpty()
+                        val out = jsonGetString(result.details, "output")
                         if (out.isNotEmpty()) {
                             _terminalOutput.update { it + out + "\n" }
                         }
@@ -156,7 +166,7 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
                     "✅ Approved and executed: ${result.output}"
                 )}
                 if (request.tool == "shell") {
-                    val out = (result.data["output"] as? String).orEmpty()
+                    val out = jsonGetString(result.data, "output")
                     if (out.isNotEmpty()) {
                         _terminalOutput.update { it + out + "\n" }
                     }
@@ -168,7 +178,7 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
                     "❌ Execution failed: ${result.error}"
                 )}
                 if (request.tool == "shell") {
-                    val out = (result.details["output"] as? String).orEmpty()
+                    val out = jsonGetString(result.details, "output")
                     if (out.isNotEmpty()) {
                         _terminalOutput.update { it + out + "\n" }
                     }
@@ -201,9 +211,9 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
         val toolRequest = ToolRequest(
             tool = "shell",
             parameters = mapOf(
-                "command" to command,
-                "workingDirectory" to workingDirectory,
-                "timeout" to timeoutSec
+                "command" to JsonPrimitive(command),
+                "workingDirectory" to JsonPrimitive(workingDirectory),
+                "timeout" to JsonPrimitive(timeoutSec)
             ),
             requestId = requestId,
             dryRun = dryRun
@@ -219,14 +229,14 @@ class EnhancedChatAgent(private val apiClient: AizaApiClient) {
             }
             is SuccessResult -> {
                 _history.update { it + Message("system", "✅ ${result.output}") }
-                val out = (result.data["output"] as? String).orEmpty()
+                val out = jsonGetString(result.data, "output")
                 if (out.isNotEmpty()) {
                     _terminalOutput.update { it + out + "\n" }
                 }
             }
             is ErrorResult -> {
                 _history.update { it + Message("system", "❌ ${result.error}") }
-                val out = (result.details["output"] as? String).orEmpty()
+                val out = jsonGetString(result.details, "output")
                 if (out.isNotEmpty()) {
                     _terminalOutput.update { it + out + "\n" }
                 }
