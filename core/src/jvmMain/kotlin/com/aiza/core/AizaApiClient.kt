@@ -7,7 +7,9 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
@@ -40,7 +42,7 @@ class AizaApiClient(
         }.body()
     }
 
-    // SSE-like streaming of chat completion chunks.
+    // SSE-like streaming of chat completion chunks (for models that support streaming responses).
     fun getChatCompletionStream(request: ChatRequest): Flow<ChatResponseChunk> {
         val streamRequest = ChatRequestStream(
             model = request.model,
@@ -62,7 +64,8 @@ class AizaApiClient(
 
             try {
                 while (!channel.isClosedForRead) {
-                    val line = channel.readUTF8Line() ?: break
+                    // Some environments require an explicit limit parameter
+                    val line = channel.readUTF8Line(8192) ?: break
                     val trimmed = line.trim()
                     if (!trimmed.startsWith("data:")) continue
 
@@ -70,16 +73,15 @@ class AizaApiClient(
                     if (data == "[DONE]") break
                     if (data.isEmpty()) continue
 
-                    try {
+                    runCatching {
                         val chunk = Json.decodeFromString(ChatResponseChunk.serializer(), data)
                         emit(chunk)
-                    } catch (e: Exception) {
-                        // Skip malformed/partial chunks
-                        // println("Streaming parse error: ${e.message}")
+                    }.onFailure {
+                        // Skip malformed/partial chunks silently to keep stream resilient
                     }
                 }
             } finally {
-                channel.cancel()
+                channel.cancel(cause = null)
             }
         }
     }
